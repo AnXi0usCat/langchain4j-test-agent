@@ -1,0 +1,73 @@
+Why do we need our own persistence layer for runs?
+
+Because there are two different kinds of persistence:
+
+A. Chat memory
+B. Run/event/audit persistence
+
+LangChain4j can handle chat memory. In our code, this part:
+
+.chatMemoryProvider(memoryId ->
+    MessageWindowChatMemory.withMaxMessages(config.chatMemoryMaxMessages())
+)
+
+means LangChain4j keeps a sliding window of recent messages per @MemoryId. MessageWindowChatMemory is documented as retaining the most recent messages that fit within the configured window and evicting older ones.
+
+But that is not the same as a LangGraph checkpoint.
+
+In the Python LangGraph version, the graph state was persisted by a checkpointer. It could persist fields like:
+
+plan
+test_output
+review
+is_done
+next node
+pending interrupt
+messages
+
+LangChain4j does not automatically persist a workflow graph for us here, because we have not built a LangGraph-like workflow engine in Java. We built a single LangChain4j AI Service with tools. LangChain4j AI Services are high-level Java interfaces that hide LLM interaction complexity and support things like chat memory, tools, and RAG, but they are not the same thing as LangGraph checkpointed state machines.
+
+So our runs table is not replacing LangChain4j memory. It is for observability:
+
+runs:
+  one row per user request / agent run
+
+run_events:
+  start
+  token
+  partial_tool_call
+  before_tool
+  tool_executed
+  complete
+  error
+
+That gives you:
+
+What happened?
+When did it happen?
+Which tools ran?
+What did the stream emit?
+Did the run fail?
+Can I replay/debug the stream?
+
+LangChain4j memory answers a different question:
+
+What context should be sent back to the model on the next call?
+
+The LangChain4j docs explicitly distinguish memory from history: history is what the user sees, while memory is the information presented to the LLM so it behaves as if it remembers.
+
+So the answer is:
+
+LangChain4j gives us chat memory.
+We persist runs/events ourselves for audit/debug/stream replay.
+If we want durable chat memory, we also need to configure a ChatMemoryStore.
+
+Right now, our memory provider uses the default store behind MessageWindowChatMemory. The docs say MessageWindowChatMemory stores state in a ChatMemoryStore, and if none is provided, SingleSlotChatMemoryStore is used. Its builder also exposes .chatMemoryStore(...), which is what we would use to persist chat memory to Postgres.
+
+A production setup would likely have both:
+
+PostgresChatMemoryStore:
+  durable conversation memory per sessionId
+
+runs / run_events:
+  audit trail and stream observability

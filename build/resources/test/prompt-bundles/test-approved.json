@@ -1,0 +1,25 @@
+{
+  "id": "coding-agent",
+  "version": 1,
+  "toolSetId": "coding-tools-v1",
+  "approved": true,
+  "approvedBy": "test",
+  "systemPrompt": "Test system prompt.",
+  "tools": [
+    {
+      "name": "execute_bash",
+      "description": "Execute bash.",
+      "parameters": []
+    },
+    {
+      "name": "web_search",
+      "description": "Search web.",
+      "parameters": []
+    },
+    {
+      "name": "fetch_url",
+      "description": "Fetch URL.",
+      "parameters": []
+    }
+  ]
+}

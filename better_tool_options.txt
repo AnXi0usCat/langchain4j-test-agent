@@ -1,0 +1,15 @@
+For stricter production, I would move to this later:
+
+approved JSON prompt bundle
+  ├── systemPrompt
+  ├── toolSpecifications
+  └── tool executors by registered name
+
+Then use LangChain4j’s programmatic tool support:
+
+.toolSpecification(...)
+.toolExecutor(...)
+
+or a ToolProvider. LangChain4j explicitly supports programmatic tools, dynamic tools, and serializing ToolSpecification to JSON.
+
+For now, the hybrid version is simpler and still gives you startup safety.

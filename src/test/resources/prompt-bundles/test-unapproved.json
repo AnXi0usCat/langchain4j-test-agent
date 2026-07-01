@@ -1,0 +1,15 @@
+{
+  "id": "coding-agent",
+  "version": 1,
+  "toolSetId": "coding-tools-v1",
+  "approved": false,
+  "approvedBy": "",
+  "systemPrompt": "Test system prompt.",
+  "tools": [
+    {
+      "name": "execute_bash",
+      "description": "Execute bash.",
+      "parameters": []
+    }
+  ]
+}
