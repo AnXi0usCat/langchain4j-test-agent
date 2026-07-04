@@ -13,8 +13,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CodingToolsContractTest {
 
+    /**
+     * CodingTools' {@code @Tool} methods carry no name/description/{@code @P} metadata - the schema
+     * actually sent to the model comes from the approved prompt bundle (see
+     * {@code prompt-bundles/coding-agent-v1.json} and {@link PromptBundleContractTest}).
+     * This test only pins down the part {@code @Tool} still governs: which method names exist and
+     * what parameter names {@link ToolExecutorFactory}/reflection will bind arguments to.
+     */
     @Test
-    void toolSpecificationsExposeExpectedToolsAndParameters() throws Exception {
+    void toolAnnotatedMethodsExposeExpectedNamesAndParameters() throws Exception {
         CodingTools tools = new CodingTools(
                 TestConfigs.appConfig(Files.createTempDirectory("agent-tools"), 1000)
         );
@@ -30,15 +37,6 @@ class CodingToolsContractTest {
                         "web_search",
                         "fetch_url"
                 );
-
-        assertThat(byName.get("execute_bash").description())
-                .containsIgnoringCase("bash");
-
-        assertThat(byName.get("web_search").description())
-                .containsIgnoringCase("web");
-
-        assertThat(byName.get("fetch_url").description())
-                .containsIgnoringCase("url");
 
         String executeBashParams = String.valueOf(byName.get("execute_bash").parameters());
         String webSearchParams = String.valueOf(byName.get("web_search").parameters());
