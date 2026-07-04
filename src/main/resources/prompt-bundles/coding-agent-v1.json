@@ -8,13 +8,13 @@
   "tools": [
     {
       "name": "execute_bash",
-      "description": "Execute a bash command inside /workspace. Use for coding tasks: listing files, reading files, writing files, running tests, grep/ripgrep, and inspecting logs. Do not use for long-running servers or destructive host operations.",
+      "description": "Execute a bash command inside the isolated /workspace directory.\n\nUse this for coding tasks:\n- inspect files and directories\n- create or edit files\n- run tests\n- run grep/ripgrep/find\n- inspect command output and logs\n\nDo not use this for:\n- long-running servers\n- SSH/SCP/rsync\n- Docker or Kubernetes commands\n- destructive host operations\n- reading secrets",
       "parameters": {
         "type": "object",
         "properties": {
           "command": {
             "type": "string",
-            "description": "Bash command to run inside /workspace. Prefer small, inspectable commands."
+            "description": "Bash command to run inside /workspace.\n\nPrefer small, verifiable commands.\nThe command runs with /workspace as cwd.\nThe command is subject to timeout and safety filtering."
           }
         },
         "required": ["command"]
@@ -22,13 +22,13 @@
     },
     {
       "name": "web_search",
-      "description": "Search the public web for current technical information, documentation, APIs, or error messages. Use when local knowledge may be stale.",
+      "description": "Search the public web for current technical information.\n\nUse this when:\n- library APIs may have changed\n- error messages need investigation\n- current documentation is needed\n- public facts may be stale\n\nReturn value contains result titles, URLs, and snippets.\nPrefer fetch_url afterwards when one specific result is relevant.",
       "parameters": {
         "type": "object",
         "properties": {
           "query": {
             "type": "string",
-            "description": "Search query."
+            "description": "Search query. Include library/framework names, error messages, and version numbers when available."
           },
           "maxResults": {
             "type": "integer",
@@ -40,7 +40,7 @@
     },
     {
       "name": "fetch_url",
-      "description": "Fetch a URL and extract readable text. Use after web_search when a result looks relevant.",
+      "description": "Fetch an HTTP or HTTPS URL and extract readable page text.\n\nUse after web_search when:\n- a specific result looks relevant\n- documentation details are needed\n- the final answer should cite or summarize a page\n\nThis tool only handles HTML or plain text.",
       "parameters": {
         "type": "object",
         "properties": {

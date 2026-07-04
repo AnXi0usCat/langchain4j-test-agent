@@ -1,7 +1,6 @@
 package dev.example.agent;
 
 import com.google.inject.Inject;
-import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -39,39 +38,11 @@ public class CodingTools {
         config.workspaceDir().toFile().mkdirs();
     }
 
-    @Tool(
-            name = "execute_bash",
-            value = """
-                Execute a bash command inside the isolated /workspace directory.
-
-                Use this for coding tasks:
-                - inspect files and directories
-                - create or edit files
-                - run tests
-                - run grep/ripgrep/find
-                - inspect command output and logs
-
-                Do not use this for:
-                - long-running servers
-                - SSH/SCP/rsync
-                - Docker or Kubernetes commands
-                - destructive host operations
-                - reading secrets
-                """
-    )
-    public String execute_bash(
-            @P(
-                    name = "command",
-                    description = """
-                        Bash command to run inside /workspace.
-
-                        Prefer small, verifiable commands.
-                        The command runs with /workspace as cwd.
-                        The command is subject to timeout and safety filtering.
-                        """
-            )
-            String command
-    ) {
+    // Description and parameter schema are sourced from the approved prompt bundle
+    // (see prompt-bundles/coding-agent-v1.json); this annotation only marks the method
+    // as a tool so ToolContractValidator/ToolExecutorFactory can locate it by name.
+    @Tool
+    public String execute_bash(String command) {
         if (command == null || command.isBlank()) return "No command provided.";
         if (isDangerous(command)) return "Blocked: command looked dangerous for this learning sandbox. Try a safer command limited to /workspace.";
         ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-lc", command);
@@ -88,35 +59,8 @@ public class CodingTools {
         } catch (Exception e) { return "Command failed: " + e.getClass().getSimpleName() + ": " + safeMessage(e); }
     }
 
-    @Tool(
-            name = "web_search",
-            value = """
-                Search the public web for current technical information.
-
-                Use this when:
-                - library APIs may have changed
-                - error messages need investigation
-                - current documentation is needed
-                - public facts may be stale
-
-                Return value contains result titles, URLs, and snippets.
-                Prefer fetch_url afterwards when one specific result is relevant.
-                """
-    )
-    public String web_search(
-            @P(
-                    name = "query",
-                    description = "Search query. Include library/framework names, error messages, and version numbers when available."
-            )
-            String query,
-
-            @P(
-                    name = "maxResults",
-                    description = "Maximum number of results to return. Usually 3 to 5 is enough.",
-                    required = false
-            )
-            Integer maxResults
-    ) {
+    @Tool
+    public String web_search(String query, Integer maxResults) {
         if (query == null || query.isBlank()) return "No query provided.";
         int limit = Math.max(1, Math.min(maxResults, 10));
         URI uri = URI.create("https://duckduckgo.com/html/?q=" + URLEncoder.encode(query, StandardCharsets.UTF_8));
@@ -139,26 +83,8 @@ public class CodingTools {
         } catch (Exception e) { return "Web search failed: " + e.getClass().getSimpleName() + ": " + safeMessage(e); }
     }
 
-    @Tool(
-            name = "fetch_url",
-            value = """
-                Fetch an HTTP or HTTPS URL and extract readable page text.
-
-                Use after web_search when:
-                - a specific result looks relevant
-                - documentation details are needed
-                - the final answer should cite or summarize a page
-
-                This tool only handles HTML or plain text.
-                """
-    )
-    public String fetch_url(
-            @P(
-                    name = "url",
-                    description = "HTTP or HTTPS URL to fetch."
-            )
-            String url
-    ) {
+    @Tool
+    public String fetch_url(String url) {
         if (url == null || url.isBlank()) return "No URL provided.";
         URI uri;
         try { uri = URI.create(url); } catch (IllegalArgumentException e) { return "Invalid URL: " + url; }
