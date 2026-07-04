@@ -9,40 +9,48 @@
     {
       "name": "execute_bash",
       "description": "Execute a bash command inside /workspace. Use for coding tasks: listing files, reading files, writing files, running tests, grep/ripgrep, and inspecting logs. Do not use for long-running servers or destructive host operations.",
-      "parameters": [
-        {
-          "name": "command",
-          "description": "Bash command to run inside /workspace. Prefer small, inspectable commands.",
-          "required": true
-        }
-      ]
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "Bash command to run inside /workspace. Prefer small, inspectable commands."
+          }
+        },
+        "required": ["command"]
+      }
     },
     {
       "name": "web_search",
       "description": "Search the public web for current technical information, documentation, APIs, or error messages. Use when local knowledge may be stale.",
-      "parameters": [
-        {
-          "name": "query",
-          "description": "Search query.",
-          "required": true
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query."
+          },
+          "maxResults": {
+            "type": "integer",
+            "description": "Maximum number of results to return. Usually 3 to 5 is enough."
+          }
         },
-        {
-          "name": "maxResults",
-          "description": "Maximum number of results to return. Usually 3 to 5 is enough.",
-          "required": false
-        }
-      ]
+        "required": ["query"]
+      }
     },
     {
       "name": "fetch_url",
       "description": "Fetch a URL and extract readable text. Use after web_search when a result looks relevant.",
-      "parameters": [
-        {
-          "name": "url",
-          "description": "HTTP or HTTPS URL to fetch.",
-          "required": true
-        }
-      ]
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "HTTP or HTTPS URL to fetch."
+          }
+        },
+        "required": ["url"]
+      }
     }
   ]
 }

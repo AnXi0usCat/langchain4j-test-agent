@@ -8,18 +8,15 @@
   "tools": [
     {
       "name": "execute_bash",
-      "description": "Execute bash.",
-      "parameters": []
+      "description": "Execute bash."
     },
     {
       "name": "web_search",
-      "description": "Search web.",
-      "parameters": []
+      "description": "Search web."
     },
     {
       "name": "fetch_url",
-      "description": "Fetch URL.",
-      "parameters": []
+      "description": "Fetch URL."
     }
   ]
 }

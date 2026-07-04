@@ -8,8 +8,7 @@
   "tools": [
     {
       "name": "execute_bash",
-      "description": "Execute bash.",
-      "parameters": []
+      "description": "Execute bash."
     }
   ]
 }

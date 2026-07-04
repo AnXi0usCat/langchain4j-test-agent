@@ -1,11 +1,15 @@
 package dev.example.agent;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.langchain4j.agent.tool.ToolSpecification;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.List;
 
 public class PromptBundleLoader {
     private final ObjectMapper objectMapper;
@@ -29,12 +33,22 @@ public class PromptBundleLoader {
             );
         }
 
-        PromptBundle bundle;
+        JsonNode root;
         try {
-            bundle = objectMapper.readValue(bytes, PromptBundle.class);
+            root = objectMapper.readTree(bytes);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to parse prompt bundle: " + resourcePath, e);
         }
+
+        PromptBundle bundle = new PromptBundle(
+                root.path("id").asText(null),
+                root.path("version").asInt(0),
+                root.path("toolSetId").asText(null),
+                root.path("approved").asBoolean(false),
+                root.path("approvedBy").asText(null),
+                root.path("systemPrompt").asText(null),
+                toolsFrom(root.path("tools"), resourcePath)
+        );
 
         if (requireApproved && !bundle.approved()) {
             throw new IllegalStateException(
@@ -51,6 +65,26 @@ public class PromptBundleLoader {
         }
 
         return bundle;
+    }
+
+    /**
+     * Each entry in the bundle's "tools" array is a standard tool-calling JSON Schema
+     * document (name/description/parameters), so it is parsed directly into the same
+     * {@link ToolSpecification} that is sent to the model - the bundle is the schema,
+     * not a separate description of it.
+     */
+    private List<ToolSpecification> toolsFrom(JsonNode toolsNode, String resourcePath) {
+        List<ToolSpecification> tools = new ArrayList<>();
+        for (JsonNode toolNode : toolsNode) {
+            try {
+                tools.add(ToolSpecification.fromJson(toolNode.toString()));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException(
+                        "Invalid tool definition in prompt bundle: " + resourcePath, e
+                );
+            }
+        }
+        return tools;
     }
 
     private static byte[] readResource(String resourcePath) {

@@ -1,6 +1,12 @@
 package dev.example.agent;
 
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
+import dev.langchain4j.model.chat.request.json.JsonSchemaElement;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -11,7 +17,7 @@ public record PromptBundle(
         boolean approved,
         String approvedBy,
         String systemPrompt,
-        List<ToolPrompt> tools
+        List<ToolSpecification> tools
 ) {
     public String versionedId() {
         return id + ":v" + version;
@@ -19,7 +25,7 @@ public record PromptBundle(
 
     public Set<String> toolNames() {
         return tools.stream()
-                .map(ToolPrompt::name)
+                .map(ToolSpecification::name)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -36,21 +42,26 @@ public record PromptBundle(
 
         out.append("Available tools:\n");
 
-        for (ToolPrompt tool : tools) {
+        for (ToolSpecification tool : tools) {
             out.append("- ")
                     .append(tool.name())
                     .append(": ")
                     .append(tool.description())
                     .append("\n");
 
-            if (tool.parameters() != null && !tool.parameters().isEmpty()) {
+            JsonObjectSchema parameters = tool.parameters();
+            if (parameters != null && parameters.properties() != null && !parameters.properties().isEmpty()) {
+                Set<String> required = parameters.required() == null
+                        ? Set.of()
+                        : new HashSet<>(parameters.required());
+
                 out.append("  Parameters:\n");
-                for (ToolParameter parameter : tool.parameters()) {
+                for (Map.Entry<String, JsonSchemaElement> property : parameters.properties().entrySet()) {
                     out.append("  - ")
-                            .append(parameter.name())
-                            .append(parameter.required() ? " required" : " optional")
+                            .append(property.getKey())
+                            .append(required.contains(property.getKey()) ? " required" : " optional")
                             .append(": ")
-                            .append(parameter.description())
+                            .append(property.getValue().description())
                             .append("\n");
                 }
             }
@@ -58,16 +69,4 @@ public record PromptBundle(
 
         return out.toString();
     }
-
-    public record ToolPrompt(
-            String name,
-            String description,
-            List<ToolParameter> parameters
-    ) {}
-
-    public record ToolParameter(
-            String name,
-            String description,
-            boolean required
-    ) {}
 }

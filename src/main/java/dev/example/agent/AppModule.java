@@ -143,7 +143,7 @@ public class AppModule extends AbstractModule {
                 .streamingChatModel(streamingModel)
                 .chatModel(chatModel)
                 .systemMessageProvider(memoryId -> promptBundle.systemMessageWithToolAppendix())
-                .tools(tools)
+                .tools(ToolExecutorFactory.build(promptBundle, tools))
                 .toolArgumentsErrorHandler((error, errorContext) -> ToolErrorHandlerResult.text(error.getMessage()))
                 .toolExecutionErrorHandler((error, errorContext) -> ToolErrorHandlerResult.text("Tool execution failed."))
                 .chatMemoryProvider(memoryId -> MessageWindowChatMemory.builder()
